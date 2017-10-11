@@ -3,6 +3,7 @@ import Inert from 'inert';
 import Vision from 'vision';
 const server = new Hapi.Server();
 
+import routes from './routes'
 
 server.connection({
     port:8000
@@ -23,19 +24,7 @@ server.register([
         server.log(['start'], "hapi-swagger interface loaded!")
 });
 
-server.route({
-    path:'/hello',
-    method:'GET',
-    config:{
-        //include this route in swagger documentation
-        tags:['api'],
-        description:"demo route for hello world",
-        notes:"demo route"
-    },
-    handler: (request, reply) =>{
-        reply('Hello world!')
-    }
-});
+server.route(routes)
 
 server.start(err =>{
     if (err){
