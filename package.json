@@ -1,0 +1,33 @@
+{
+  "name": "hasjobapi",
+  "version": "1.0.0",
+  "description": "this is api for hasjob platefarm in which can apply for various jobs and get a job",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node bootstrap.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shivam8800/hasJobAPI.git"
+  },
+  "keywords": [
+    "focus",
+    "on",
+    "work",
+    "rather",
+    "then",
+    "gf"
+  ],
+  "author": "shivam raj",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shivam8800/hasJobAPI/issues"
+  },
+  "homepage": "https://github.com/shivam8800/hasJobAPI#readme",
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "hapi": "^16.6.2"
+  }
+}
