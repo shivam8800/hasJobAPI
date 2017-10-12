@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 var AppliedSchema = new Schema({
     username:{ type: String, required: true, unique: true },
     company:[
-        {
+        {   
             name:{ type: String, required: true, unique: true },
             status:String
         }
