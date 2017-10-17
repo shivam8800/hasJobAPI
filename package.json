@@ -33,6 +33,8 @@
     "inert": "^4.2.1",
     "joi": "^11.3.4",
     "mongoose": "^4.12.1",
+    "mongoose-type-mail": "^1.0.0",
+    "multer": "^1.3.0",
     "nodemon": "^1.12.1",
     "vision": "^4.1.1"
   }
