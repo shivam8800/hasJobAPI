@@ -8,12 +8,12 @@ var UserSchema = new Schema({
     lastname:String,
     username:{ type: String, required: true, unique: true },
     password:{ type: String, required: true },
-    emailid:Email,
+    emailid:{type:Email, required:true, unique:true},
     gender:String,
-    createat: { type: Date, default: Date.now },
+    createat: { type: Date,required: true, default: Date.now },
     employers: Boolean,
-    contactNumber:{ type: Number, min: 10, max: 10 },
-    resume:String
+    contactNumber:Number,
+    resume:{type: Buffer,required: true}
 });
 
 const User = mongoose.model('User', UserSchema)
