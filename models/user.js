@@ -12,15 +12,9 @@ var UserSchema = new Schema({
     gender:String,
     createat: { type: Date,required: true, default: Date.now },
     employers: Boolean,
-<<<<<<< HEAD
-    contactNumber:{ type: Number },
-    resume:String
-}); 
-=======
     contactNumber:Number,
     resume:{type: Buffer,required: true}
 });
->>>>>>> da74c0045eed2a6fc9344615582846e7f48c2830
 
 const User = mongoose.model('User', UserSchema)
 
