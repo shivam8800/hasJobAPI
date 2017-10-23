@@ -1,8 +1,11 @@
 
 const db = require('../database').db;
 const jobsModel = require('../models/jobs');
+var request = require('request');
 const userModel = require('../models/user');
 const Joi = require('joi');
+const fs = require('fs');
+const path = require('path');
 
 import jwt from 'jsonwebtoken';
 
@@ -127,32 +130,6 @@ const routes =[
             auth: {
                 strategy: 'token',
             }
-        },
-        handler: (request, reply) =>{
-            console.log(request.params.userid);
-            Usermodel.find({_id:request.params.userid}, function(err, data){
-                if(err){
-					reply({
-						statusCode:503,
-						message:"Failed to get data",
-						data:err
-					});
-				}
-				else if (data.length == 0 ){
-                    console.log(data);
-					reply({
-						statusCode:200,
-						message:"user does not exist",
-						data:data
-					});
-				}
-				else {
-					reply({
-						statusCode:200,
-						message:"data user Successfully Fetched",
-    						data:data
-					});
-				}
         },
         handler: function(request, reply){
             var query = {$and:[{joblocation:{$regex: request.params.joblocation, $options: 'i'}},{jobtype:{$regex: request.params.jobtype, $options: 'i'}},{jobcategory:{$regex: request.params.jobcategory, $options: 'i'}},{jobtitle:{$regex: request.params.jobtitle, $options: 'i'}}]}
@@ -1034,7 +1011,73 @@ const routes =[
                 }
             });
         }
-    }
+    },
+    //for uploading a resume
+    {
+        method: 'POST',
+        path: '/submit/resume',
+        config: {
+    
+            payload: {
+                output: 'stream',
+                parse: true,
+                allow: 'multipart/form-data'
+            },
+            auth: {
+                strategy: 'token',
+            },
+    
+            handler: function (request, reply) {
+                var data = request.payload;
+                console.log(request.auth.credentials.username);
+                if (data.resume) {
+                    var name = request.auth.credentials.username + ".pdf";
+                    const __dirname = '/home/navgurukul/Desktop/project/Nodejs/hasJobAPI/hasJobAPI'
+                    var path = __dirname + "/uploads/" + name;
+                    var file = fs.createWriteStream(path);
+    
+                    file.on('error', function (err) { 
+                        console.error(err) 
+                    });
+    
+                    data.resume.pipe(file);
+    
+                    data.resume.on('end', function (err) {
+                        var ret = {
+                            filename: request.auth.credentials.username + ".pdf",
+                            headers: data.resume.hapi.headers
+                        }
+                        reply(JSON.stringify(ret));
+                    })
+                }
+    
+            }
+        }
+    },
+     //showing  resume file
+    {
+        method: 'GET',
+        path: '/file',
+        config:{
+            auth: {
+                strategy: 'token',
+            }
+        },
+        handler: function(request,reply){
+            console.log('we are here')
+            const __dirname = '/home/navgurukul/Desktop/project/Nodejs/hasJobAPI/hasJobAPI/uploads'
+            var file = path.join(__dirname, request.auth.credentials.username + ".pdf");
+
+            fs.readFile(file , function (err,data){
+                console.log(data);
+                return reply(data)
+                .header('Content-disposition', 'attachment; filename=' + request.auth.credentials.username + ".pdf")
+        
+            });
+
+        }   
+    },
 ]
 
 export default routes;
+
