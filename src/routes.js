@@ -1056,21 +1056,21 @@ const routes =[
     //showing  resume file
     {
         method: 'GET',
-        path: '/file',
+        path: '/file/{username}',
         config:{
-            auth: {
-                strategy: 'token',
+            validate:{
+                params:{
+                    username:Joi.string()
+                }
             }
         },
         handler: function(request,reply){
             const __dirname = '/home/shivam/NodeJs/hasjobAPI/uploads'
-            var file = path.join(__dirname, request.auth.credentials.username + ".pdf");
+            var file = path.join(__dirname, request.params.username + ".pdf");
 
             fs.readFile(file , function (err,data){
-                console.log(data);
                 return reply(data)
-                .header('Content-disposition', 'attachment; filename=' + request.auth.credentials.username + ".pdf")
-        
+                .header('Content-disposition', 'attachment; filename=' + request.params.username + ".pdf")
             });
 
         }   
