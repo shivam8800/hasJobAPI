@@ -6,11 +6,62 @@ const userModel = require('../models/user');
 const Joi = require('joi');
 const fs = require('fs');
 const path = require('path');
+const express = require('express');
+const cheerio = require('cheerio');
+const app     = express();
+
+
 
 import jwt from 'jsonwebtoken';
 
+
+app.get('/scrape', function(req, res){
+
+url = 'http://www.imdb.com/title/tt1229340/';
+
+request(url, function(error, response, html){
+    if(!error){
+        var $ = cheerio.load(html);
+
+    var title, release, rating;
+    var json = { title : "", release : "", rating : ""};
+
+    $('.header').filter(function(){
+        var data = $(this);
+        title = data.children().first().text();            
+        release = data.children().last().children().text();
+
+        json.title = title;
+        json.release = release;
+    })
+
+    $('.star-box-giga-star').filter(function(){
+        var data = $(this);
+        rating = data.text();
+
+        json.rating = rating;
+    })
+}
+
+// To write to the system we will use the built in 'fs' library.
+// In this example we will pass 3 parameters to the writeFile function
+// Parameter 1 :  output.json - this is what the created filename will be called
+// Parameter 2 :  JSON.stringify(json, null, 4) - the data to write, here we do an extra step by calling JSON.stringify to make our JSON easier to read
+// Parameter 3 :  callback function - a callback function to let us know the status of our function
+
+fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
+
+    console.log('File successfully written! - Check your project directory for the output.json file');
+
+})
+
+// Finally, we'll just send out a message to the browser reminding you that this app does not have a UI.
+res.send('Check your console!')
+
+    }) ;
+})
+
 const routes =[
-            // get user data with user id
     {
         method:'POST',
         path:'/auth',
@@ -238,6 +289,9 @@ const routes =[
                     companyname:Joi.string(),
                     jobtitle:Joi.string()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: function(request, reply){
@@ -279,6 +333,9 @@ const routes =[
                     companyname:Joi.string(),
                     jobtitle:Joi.string()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: function(request, reply){
@@ -320,6 +377,9 @@ const routes =[
                     companyname:Joi.string(),
                     jobtitle:Joi.string()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: function(request, reply){
@@ -361,6 +421,9 @@ const routes =[
                     companyname:Joi.string(),
                     jobtitle:Joi.string()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: function(request, reply){
@@ -402,6 +465,9 @@ const routes =[
                     companyname:Joi.string(),
                     jobtitle:Joi.string()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: function(request, reply){
@@ -429,105 +495,6 @@ const routes =[
             });
         }
     },
-    // new user post 
-    {
-        path: '/hasjob/postNew/user',
-        method: 'POST',
-        config: {
-            tags: ['api'],
-            description: 'Post New User With His Full Details',
-            notes: 'Post New User',
-            // we joi plugin to validate request
-            validate:{
-              payload:{
-                    firstname:Joi.string().required(),
-                    lastname:Joi.string(),
-                    username:Joi.string().required(),
-                    password:Joi.string().required(),
-                    emailid:Joi.string().required(),
-                    gender:Joi.string(),
-                    employers:Joi.boolean(),
-                    contactNumber:Joi.number(),
-                    resume:Joi.string()
-                }
-            }
-        },
-        handler: function(request, reply){
-           var newUser = new Usermodel({
-               "firstname" : request.payload.firstname,
-               "lastname" : request.payload.lastname,
-               "username" : request.payload.username,
-               "password" : request.payload.password,
-               "emailid" : request.payload.emailid,
-               "gender" : request.payload.gender,
-               "createat":new Date(),
-               "employers" : request.payload.employers,
-               "contactNumber" : request.payload.contactNumber,
-               "resume" : request.payload.resume
-           });
-
-           newUser.save(function(err, data){
-               if (err){
-                   throw err;
-                   console.log(err);
-               } else{
-                   reply({
-                        statusCode: 200,
-                        message: 'User created Successfully',
-                        data: data
-                    });   
-               }
-           });
-       }
-    },
-    // user update data with user ID
-    {
-      method: 'PUT',
-      path: '/hasjob/updateUser/{id}',
-      config: {
-        // swager documention fields tags, descrioption and, note
-        tags: ['api'],
-        description: 'Update specific user data',
-        notes: 'Update specific user data',
-
-        // Joi api validation
-        validate: {
-          params: {
-            // `id` is required field and can accepte string data
-            id: Joi.string().required()
-          },
-          payload: {
-                    firstname:Joi.string().required(),
-                    lastname:Joi.string(),
-                    username:Joi.string().required(),
-                    password:Joi.string().required(),
-                    emailid:Joi.string().required(),
-                    gender:Joi.string(),
-                    employers:Joi.boolean(),
-                    contactNumber:Joi.number(),
-                    resume:Joi.string()
-          }
-        }
-      },
-      handler: function(request, reply) {
-        // find user with his id and update user data
-        Usermodel.findOneAndUpdate({_id: request.params.id}, request.payload, function (error, data) {
-          if(error){
-            reply({
-              statusCode: 503,
-              message: 'Failed to get data',
-              data: error
-            });
-          }else{
-            reply({
-              statusCode: 200,
-              message: 'User Update Successfully',
-              data: data
-            });
-          }
-        });
-      }
-    },
     // user delete data with paticular id
     {
       method: 'DELETE',
@@ -540,9 +507,12 @@ const routes =[
 
         // Joi api validation
         validate: {
-          params: {
-            id: Joi.string().required()
-          }
+            params: {
+                id: Joi.string().required()
+            }
+        },
+        auth: {
+            strategy: 'token',
         }
       },
       handler: function(request, reply){
@@ -592,6 +562,9 @@ const routes =[
                     rejected: Joi.array(),
                     selected:Joi.array()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: function(request, reply){
@@ -642,6 +615,9 @@ const routes =[
                 params:{
                     jobtitle:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -686,6 +662,9 @@ const routes =[
                 params:{
                     joblocation:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -729,6 +708,9 @@ const routes =[
                 params:{
                     jobcategory:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -772,6 +754,9 @@ const routes =[
                 params:{
                     jobtype:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -814,6 +799,9 @@ const routes =[
                 params:{
                     companyname:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -857,6 +845,9 @@ const routes =[
                 params:{
                     companyname:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -899,6 +890,9 @@ const routes =[
                 params:{
                     companyname:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -941,6 +935,9 @@ const routes =[
                 params:{
                     companyname:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -983,6 +980,9 @@ const routes =[
                 params:{
                     companyname:Joi.string().required()
                 }
+            },
+            auth: {
+                strategy: 'token',
             }
         },
         handler: (request, reply) =>{
@@ -1012,10 +1012,59 @@ const routes =[
             });
         }
     },
+    // new user post 
+    {
+        path: '/hasjob/postNew/user',
+        method: 'POST',
+        config: {
+            tags: ['api'],
+            description: 'Post New User With His Full Details',
+            notes: 'Post New User',
+            // we joi plugin to validate request
+            validate:{
+              payload:{
+                    firstname:Joi.string().required(),
+                    lastname:Joi.string(),
+                    username:Joi.string().required(),
+                    password:Joi.string().required(),
+                    emailid:Joi.string().required(),
+                    gender:Joi.string(),
+                    employers:Joi.boolean(),
+                    contactNumber:Joi.number(),
+                }
+            }
+        },
+        handler: function(request, reply){
+           var newUser = new Usermodel({
+               "firstname" : request.payload.firstname,
+               "lastname" : request.payload.lastname,
+               "username" : request.payload.username,
+               "password" : request.payload.password,
+               "emailid" : request.payload.emailid,
+               "gender" : request.payload.gender,
+               "createat":new Date(),
+               "employers" : request.payload.employers,
+               "contactNumber" : request.payload.contactNumber,
+           });
+
+           newUser.save(function(err, data){
+               if (err){
+                   throw err;
+                   console.log(err);
+               } else{
+                   reply({
+                        statusCode: 200,
+                        message: 'User created Successfully',
+                        data: data
+                    });   
+               }
+           });
+       }
+    },
     //for uploading a resume
     {
         method: 'POST',
-        path: '/submit/resume',
+        path: '/submit',
         config: {
     
             payload: {
@@ -1029,7 +1078,6 @@ const routes =[
     
             handler: function (request, reply) {
                 var data = request.payload;
-                console.log(request.auth.credentials.username);
                 if (data.resume) {
                     var name = request.auth.credentials.username + ".pdf";
                     const __dirname = '/home/navgurukul/Desktop/project/Nodejs/hasJobAPI/hasJobAPI'
@@ -1054,29 +1102,76 @@ const routes =[
             }
         }
     },
-     //showing  resume file
+        
+    //showing  resume file
     {
         method: 'GET',
-        path: '/file',
+        path: '/file/{username}',
         config:{
-            auth: {
-                strategy: 'token',
+            validate:{
+                params:{
+                    username:Joi.string()
+                }
             }
         },
         handler: function(request,reply){
-            console.log('we are here')
             const __dirname = '/home/navgurukul/Desktop/project/Nodejs/hasJobAPI/hasJobAPI/uploads'
-            var file = path.join(__dirname, request.auth.credentials.username + ".pdf");
+            var file = path.join(__dirname, request.params.username + ".pdf");
 
             fs.readFile(file , function (err,data){
-                console.log(data);
                 return reply(data)
-                .header('Content-disposition', 'attachment; filename=' + request.auth.credentials.username + ".pdf")
-        
+                .header('Content-disposition', 'attachment; filename=' + request.params.username + ".pdf")
             });
 
         }   
     },
+    // user update data with user ID
+    {
+      method: 'PUT',
+      path: '/hasjob/updateUser/{id}',
+      config: {
+        // swager documention fields tags, descrioption and, note
+        tags: ['api'],
+        description: 'Update specific user data',
+        notes: 'Update specific user data',
+
+        // Joi api validation
+        validate: {
+          params: {
+            // `id` is required field and can accepte string data
+            id: Joi.string().required()
+          },
+          payload: {
+                    firstname:Joi.string().required(),
+                    lastname:Joi.string(),
+                    username:Joi.string().required(),
+                    password:Joi.string().required(),
+                    emailid:Joi.string().required(),
+                    gender:Joi.string(),
+                    employers:Joi.boolean(),
+                    contactNumber:Joi.number(),
+          }
+        }
+      },
+      handler: function(request, reply) {
+        // find user with his id and update user data
+        Usermodel.findOneAndUpdate({_id: request.params.id}, request.payload, function (error, data) {
+          if(error){
+            reply({
+              statusCode: 503,
+              message: 'Failed to get data',
+              data: error
+            });
+          }else{
+            reply({
+              statusCode: 200,
+              message: 'User Update Successfully',
+              data: data
+            });
+          }
+        });
+      }
+    }
 ]
 
 export default routes;
