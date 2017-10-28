@@ -8,58 +8,12 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const cheerio = require('cheerio');
-const app     = express();
+// var target = 'https://internshala.com/internships/matching-preferences';
+// const app = express();
 
 
 
 import jwt from 'jsonwebtoken';
-
-
-app.get('/scrape', function(req, res){
-
-url = 'http://www.imdb.com/title/tt1229340/';
-
-request(url, function(error, response, html){
-    if(!error){
-        var $ = cheerio.load(html);
-
-    var title, release, rating;
-    var json = { title : "", release : "", rating : ""};
-
-    $('.header').filter(function(){
-        var data = $(this);
-        title = data.children().first().text();            
-        release = data.children().last().children().text();
-
-        json.title = title;
-        json.release = release;
-    })
-
-    $('.star-box-giga-star').filter(function(){
-        var data = $(this);
-        rating = data.text();
-
-        json.rating = rating;
-    })
-}
-
-// To write to the system we will use the built in 'fs' library.
-// In this example we will pass 3 parameters to the writeFile function
-// Parameter 1 :  output.json - this is what the created filename will be called
-// Parameter 2 :  JSON.stringify(json, null, 4) - the data to write, here we do an extra step by calling JSON.stringify to make our JSON easier to read
-// Parameter 3 :  callback function - a callback function to let us know the status of our function
-
-fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
-
-    console.log('File successfully written! - Check your project directory for the output.json file');
-
-})
-
-// Finally, we'll just send out a message to the browser reminding you that this app does not have a UI.
-res.send('Check your console!')
-
-    }) ;
-})
 
 const routes =[
     {
@@ -1171,8 +1125,44 @@ const routes =[
           }
         });
       }
+    },
+    {
+        method: 'GET',
+        path: '/scrapewebdata',
+
+        config:{
+            tags: ['api'],
+            description: 'scrape data other website',
+            notes: 'scrape data other website'
+        },
+        handler: function(request1, reply) {
+            
+            
+            request('https://internshala.com/internships/matching-preferences', function(error, response, body){
+                if(!error && response.statusCode === 200){
+                    var $ = cheerio.load(body);
+                    console.log(body);
+
+                    var fulldetails;
+                    var json = {fulldetails : ""};
+
+                    $('.internship_list_container').filter(function(){
+                        var data = $(this);
+                        fulldetails = data.text();
+                        // console.log(fulldetails[0]);
+                        json.fulldetails = fulldetails;
+                    })
+                }
+                fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
+                    reply({
+                        'data': fulldetails
+                    })
+                    console.log('File successfully written! - Check your project directory for the output.josn file');
+                })
+                // response.send('Check your console!')
+            });
+        }
     }
 ]
 
 export default routes;
-
